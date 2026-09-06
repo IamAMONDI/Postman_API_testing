@@ -1,0 +1,248 @@
+{
+	"info": {
+		"name": "GitHub Gists API",
+		"description": "Collection for testing CRUD operations on GitHub Gists with Authentication.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Verify Authentication",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Authenticated User matches\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.login).to.exist;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/user",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"user"
+					]
+				},
+				"description": "Retrieves the authenticated user's details to verify the Personal Access Token."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Create Gist (POST)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Pre-request script to generate a dynamic description with timestamp",
+							"let timestamp = new Date().toISOString();",
+							"pm.environment.set(\"current_timestamp\", timestamp);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"pm.test(\"Response has ID\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.id).to.exist;",
+							"    // Save the ID for subsequent requests",
+							"    pm.environment.set(\"gist_id\", jsonData.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"description\": \"Test Gist created from Postman at {{current_timestamp}}\",\n  \"public\": false,\n  \"files\": {\n    \"test_file.txt\": {\n      \"content\": \"Hello, this is a test gist created via Postman API testing!\"\n    }\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/gists",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"gists"
+					]
+				},
+				"description": "Creates a new secret gist."
+			},
+			"response": []
+		},
+		{
+			"name": "3. Read Gist (GET)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Gist ID matches environment variable\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.id).to.eql(pm.environment.get(\"gist_id\"));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/gists/{{gist_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"gists",
+						"{{gist_id}}"
+					]
+				},
+				"description": "Retrieves the gist created in the previous step."
+			},
+			"response": []
+		},
+		{
+			"name": "4. Update Gist (PATCH)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Description is updated\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.description).to.eql(\"Updated Test Gist from Postman\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"description\": \"Updated Test Gist from Postman\",\n  \"files\": {\n    \"test_file.txt\": {\n      \"content\": \"The content has been updated via PATCH request!\"\n    }\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/gists/{{gist_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"gists",
+						"{{gist_id}}"
+					]
+				},
+				"description": "Updates the existing gist."
+			},
+			"response": []
+		},
+		{
+			"name": "5. Delete Gist (DELETE)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/gists/{{gist_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"gists",
+						"{{gist_id}}"
+					]
+				},
+				"description": "Deletes the gist."
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global Pre-request Script for the Collection",
+					"// Ensures variables are set before execution",
+					"if (!pm.environment.get(\"access_token\")) {",
+					"    console.warn(\"Warning: access_token is missing! Please set your GitHub Personal Access Token in the environment.\");",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

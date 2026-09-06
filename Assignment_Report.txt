@@ -1,0 +1,99 @@
+API Testing with Postman - Assignment Report
+
+Student Name: [Your Name]
+Student ID: [Your ID]
+Date: [Date]
+
+=======================================================
+1. API CHOICE AND BASE URL
+=======================================================
+- API Choice: GitHub API (Gists)
+- Base URL: https://api.github.com
+- Reason for Choice: The GitHub API is an industry-standard, reliable public REST API. It supports the full CRUD lifecycle (Create, Read, Update, Delete) through Gists and implements real-world, secure token-based authentication (Personal Access Token).
+
+
+=======================================================
+2. AUTHENTICATION METHOD USED
+=======================================================
+The GitHub REST API utilizes Personal Access Tokens (PAT) for user authentication. 
+
+In Postman, authentication was configured at the Collection level using the "Bearer Token" type. The token itself is stored securely within the Postman Environment under the variable name {{access_token}}. This approach centralizes authorization so every request automatically inherits the token without needing manual header configuration.
+
+(Note: Unlike APIs that provide a /login endpoint to exchange username/password for a temporary session token, GitHub PATs are provisioned securely via GitHub's Developer Settings. A dedicated GET request to the /user endpoint was implemented to validate that the token is active and authorized before running subsequent operations.)
+
+
+=======================================================
+3. CRUD OPERATIONS BREAKDOWN
+=======================================================
+
+--- CREATE (POST) ---
+- Endpoint: POST /gists
+- Purpose: Creates a new secret Gist on the authenticated GitHub account.
+- Pre-request Script: Executes JavaScript to dynamically generate an ISO timestamp and stores it in the environment variable "current_timestamp", ensuring every run creates a uniquely identifiable description.
+- Request Body (JSON):
+  {
+    "description": "Test Gist created from Postman at {{current_timestamp}}",
+    "public": false,
+    "files": {
+      "test_file.txt": {
+        "content": "Hello, this is a test gist created via Postman API testing!"
+      }
+    }
+  }
+- Test Script: Asserts that the HTTP response status code is 201 Created. Parses the response JSON body, extracts the new unique "id", and dynamically stores it into the Postman environment variable "gist_id" to chain into the next requests.
+
+[INSERT SCREENSHOT HERE: POST Request and 201 Created Response]
+
+
+--- READ (GET) ---
+- Endpoint: GET /gists/{{gist_id}}
+- Purpose: Fetches the specific Gist created in the POST step using the dynamic ID.
+- Test Script: Asserts that the HTTP response status code is 200 OK and validates that the returned "id" matches the "gist_id" stored in the environment.
+
+[INSERT SCREENSHOT HERE: GET Request and 200 OK Response]
+
+
+--- UPDATE (PATCH) ---
+- Endpoint: PATCH /gists/{{gist_id}}
+- Purpose: Updates both the description and file content of the existing Gist.
+- Request Body (JSON):
+  {
+    "description": "Updated Test Gist from Postman",
+    "files": {
+      "test_file.txt": {
+        "content": "The content has been updated via PATCH request!"
+      }
+    }
+  }
+- Test Script: Asserts that the HTTP response status code is 200 OK and validates that the description field returned in the response matches the new updated text.
+
+[INSERT SCREENSHOT HERE: PATCH Request and 200 OK Response]
+
+
+--- DELETE (DELETE) ---
+- Endpoint: DELETE /gists/{{gist_id}}
+- Purpose: Permanently deletes the test Gist to clean up resources on the server.
+- Test Script: Asserts that the HTTP response status code is 204 No Content, confirming successful deletion with no body content returned.
+
+[INSERT SCREENSHOT HERE: DELETE Request and 204 No Content Response]
+
+
+=======================================================
+4. ENVIRONMENT VARIABLES AND AUTOMATION
+=======================================================
+To make the collection automated, dynamic, and reusable without hardcoding values, the following Postman environment variables were utilized:
+
+1. base_url: Stores "https://api.github.com" so endpoints do not need repeating.
+2. access_token: Securely holds the GitHub Personal Access Token (PAT).
+3. gist_id: Automatically captured from the response of the POST request and passed dynamically into the GET, PATCH, and DELETE requests.
+4. current_timestamp: Generated in the pre-request script and injected into the request payload.
+
+This architecture enables request chaining, eliminating the need to manually copy and paste IDs between requests.
+
+
+=======================================================
+5. COLLECTION RUNNER EXECUTION
+=======================================================
+The entire collection was executed automatically from start to finish using the Postman Collection Runner. All 5 requests executed sequentially, and all automated test assertions passed with green status indicators.
+
+[INSERT SCREENSHOT HERE: Collection Runner Summary Screen Showing All Passed Tests]

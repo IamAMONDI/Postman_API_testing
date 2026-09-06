@@ -1,0 +1,9 @@
+# Use this workspace to collaborate
+workspace:
+  id: 2b548049-5863-46dc-9fac-47bedfeb68c2
+
+localResources:
+  collections:
+    - ../GitHub_Gists_API.postman_collection.json
+  environments:
+    - ../GitHub_API_Environment.postman_environment.json
